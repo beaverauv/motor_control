@@ -47,10 +47,10 @@ esc_f_max = 1700
 esc_r_min = 1450
 esc_r_max = 1300
 
-trans_vector = 45
-trans_magnitude = 100
+trans_vector = 0
+trans_magnitude = 0
 rotate_vector = 1 #1 clockwise, -1 counter
-rotate_magnitude = 5
+rotate_magnitude = 0
 
 def scale_map(x, in_min, in_max, out_min, out_max): 
         return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min

@@ -72,15 +72,19 @@ def normalize(max):
 		return 1
 
 def trans_vector_callback(data):
+	global trans_vector
 	trans_vector = data.data
 
 def trans_mag_callback(data):
+	global trans_magnitude
 	trans_magnitude = data.data
 
 def rotate_vector_callback(data):
+	global rotate_vector
 	rotate_vector = data.data
 
 def rotate_mag_callback(data):
+	global rotate_magnitude
 	rotate_magnitude = data.data
 
 def main():

@@ -35,22 +35,17 @@ class motor:
 		self.angle = angle
 		self.x = x
 		self.y = y
-		self.thrust = 100
+		self.thrust = 0.0
 
 hfr = motor(45, 1, 1)
 hfl = motor(315, -1, 1)
 hbr = motor(315, 1, -1)
 hbl = motor(45, -1, -1)
 
-esc_f_min = 1550
-esc_f_max = 1700
-esc_r_min = 1450
-esc_r_max = 1300
-
-trans_vector = 0
-trans_magnitude = 0
+trans_vector = 45
+trans_magnitude = 100
 rotate_vector = 1 #1 clockwise, -1 counter
-rotate_magnitude = 0
+rotate_magnitude = 5
 
 def scale_map(x, in_min, in_max, out_min, out_max): 
         return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
@@ -69,7 +64,7 @@ def normalize(max):
 	if abs(max)> 100:
 		return 100.0/abs(max)
 	else:
-		return 1
+		return 1.0
 
 def trans_vector_callback(data):
 	global trans_vector
@@ -101,20 +96,22 @@ def main():
 	while not rospy.is_shutdown():
 		hfr.thrust = calc_trans_thrust(trans_vector, trans_magnitude, hfr.angle)
 		hfr.thrust = hfr.thrust + calc_rotational(rotate_vector, rotate_magnitude, hfr.x, hfr.y)
-		hfr.thrust = hfr.thrust * normalize(hfr.thrust)
 
 		hfl.thrust = calc_trans_thrust(trans_vector, trans_magnitude, hfl.angle)
 		hfl.thrust = hfl.thrust + calc_rotational(rotate_vector, rotate_magnitude, hfl.x, hfl.y)
-		hfl.thrust = hfl.thrust * normalize(hfl.thrust)
 
 		hbr.thrust = calc_trans_thrust(trans_vector, trans_magnitude, hbr.angle)
 		hbr.thrust = hbr.thrust + calc_rotational(rotate_vector, rotate_magnitude, hbr.x, hbr.y)
-		hbr.thrust = hbr.thrust * normalize(hbr.thrust)
 
 		hbl.thrust = calc_trans_thrust(trans_vector, trans_magnitude, hbl.angle)
 		hbl.thrust = hbl.thrust + calc_rotational(rotate_vector, rotate_magnitude, hbl.x, hbl.y)
-		hbl.thrust = hbl.thrust * normalize(hbl.thrust)
 
+		normalizer = max(abs(hfr.thrust), abs(hfl.thrust), abs(hbr.thrust), abs(hbl.thrust))
+
+		hfr.thrust = hfr.thrust * normalize(normalizer)
+		hfl.thrust = hfl.thrust * normalize(normalizer)
+		hbr.thrust = hbr.thrust * normalize(normalizer)
+		hbl.thrust = hbl.thrust * normalize(normalizer)
 			
 
 		motor_msg.hrf = hfr.thrust

@@ -42,10 +42,11 @@ hfl = motor(315, -1, 1)
 hbr = motor(315, 1, -1)
 hbl = motor(45, -1, -1)
 
-trans_vector = 45
-trans_magnitude = 100
+trans_vector = 0
+trans_magnitude = 0
 rotate_vector = 1 #1 clockwise, -1 counter
-rotate_magnitude = 5
+rotate_magnitude = 0
+zeffort = 0
 
 def scale_map(x, in_min, in_max, out_min, out_max): 
         return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
@@ -72,7 +73,7 @@ def trans_vector_callback(data):
 
 def trans_mag_callback(data):
 	global trans_magnitude
-	trans_magnitude = data.data
+	trans_magnitude = data.data * 100.0
 
 def rotate_vector_callback(data):
 	global rotate_vector
@@ -82,6 +83,11 @@ def rotate_mag_callback(data):
 	global rotate_magnitude
 	rotate_magnitude = data.data
 
+def zaxis_callback(data):
+	global zeffort
+	zeffort = data.data * 100
+	print zeffort
+
 def main():
         motor_pub = rospy.Publisher('thruster_values', motor_Values, queue_size=10)
 	motor_msg = motor_Values()
@@ -90,7 +96,8 @@ def main():
 	rospy.Subscriber('translational_magnitude', Float64, trans_mag_callback)
 	rospy.Subscriber('rotational_vector', Float64, rotate_vector_callback)
 	rospy.Subscriber('rotational_magnitude', Float64, rotate_mag_callback)
-	
+	rospy.Subscriber('depth_effort', Float64, zaxis_callback)
+
 	rospy.init_node('motor_mixer', anonymous=True)
 
 	while not rospy.is_shutdown():
@@ -108,20 +115,23 @@ def main():
 
 		normalizer = max(abs(hfr.thrust), abs(hfl.thrust), abs(hbr.thrust), abs(hbl.thrust))
 
-		hfr.thrust = hfr.thrust * normalize(normalizer)
-		hfl.thrust = hfl.thrust * normalize(normalizer)
-		hbr.thrust = hbr.thrust * normalize(normalizer)
-		hbl.thrust = hbl.thrust * normalize(normalizer)
+		norm_percent = normalize(normalizer)
+
+		hfr.thrust = hfr.thrust * norm_percent
+		hfl.thrust = hfl.thrust * norm_percent
+		hbr.thrust = hbr.thrust * norm_percent
+		hbl.thrust = hbl.thrust * norm_percent
 			
 
 		motor_msg.hrf = hfr.thrust
 		motor_msg.hlf = hfl.thrust
 		motor_msg.hrb = hbr.thrust
 		motor_msg.hlb = hbl.thrust
-		motor_msg.vrf = 0
-		motor_msg.vlf = 0
-		motor_msg.vrb = 0
-		motor_msg.vlb = 0
+		motor_msg.vrf = int(zeffort)
+		motor_msg.vlf = int(zeffort)
+		motor_msg.vrb = int(zeffort)
+		motor_msg.vlb = int(zeffort)
+
 		
 		motor_pub.publish(motor_msg)
 
